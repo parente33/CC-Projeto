@@ -103,7 +103,6 @@ class MissionLink_Server :
         """
         Loop to send messages to clients from the send queue
         """
-        print("A mandar")
         while not self.shutdown:
                 try:
                     (header, payload) = await asyncio.wait_for(self.send_queue.get(), timeout=0.1)
@@ -121,7 +120,6 @@ class MissionLink_Server :
                 # Only wait for ACKs on DATA messages
                 if header.type == MissionHeader.TYPE_DATA :
                     asyncio.create_task(self.wait_acks(connection_ID, seq, header, payload))
-                print("Mandei", header.type)
 
     def genereate_conID(self):
         """
@@ -162,7 +160,6 @@ class MissionLink_Server :
 
         elif type == MissionHeader.TYPE_SYN :
             # Handle SYN messages (handshake initialization)
-            print("Recebi SYN")
             if self.connections_id.get(connection_ID, None) is None :
                 connection_ID = self.genereate_conID()
             self.connections_id[connection_ID] = (addr, 0)
@@ -219,7 +216,6 @@ class MissionLink_Server :
         """
         Loop to receive messages from clients
         """
-        print("A ouvir")
         loop = asyncio.get_event_loop()
         while not self.shutdown:
             try:
@@ -229,7 +225,6 @@ class MissionLink_Server :
                 )
                 header = MissionHeader.unpack(data[:MissionHeader.size])
                 payload = data[MissionHeader.size:]
-                print("Recebi", header.type)
                 asyncio.create_task(self.handle_answer(header, payload, addr))
             except asyncio.TimeoutError:
                 continue

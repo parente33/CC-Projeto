@@ -25,7 +25,6 @@ class MissionLink_Client:
 
 
 
-
     def set_RTT(self,new : float) :
         """
         Set RTT and update RTO value
@@ -45,7 +44,7 @@ class MissionLink_Client:
         loop = asyncio.get_event_loop()
 
         while True:
-            data, addr = await loop.sock_recvfrom(self.socket, MissionHeader.size + MissionLink_Client.MSS)
+            data, addr =  await loop.sock_recvfrom(self.socket, MissionHeader.size + MissionLink_Client.MSS)
             header = MissionHeader.unpack(data[:MissionHeader.size])
             payload = data[MissionHeader.size:]
 
@@ -62,10 +61,6 @@ class MissionLink_Client:
                     self.waiting = None
                     self.event.set()
                     print("Recebi")
-
-
-
-
 
     async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes):
         """
@@ -230,6 +225,7 @@ class MissionLink_Client:
         #TERMINAR A RELAÇAO COM FYN
 
         await self.end_interact()
+        print("Terminado com sucesso")
         return True
 
     async def send_request (self,payload) : # Aqui tem de vir payload para futuro se tivermos requests de varios tipos
@@ -279,7 +275,7 @@ class MissionLink_Client:
         )
         self.socket.sendto(ack_header.pack() , (self.host,self.port))
         await self.end_interact()
-        return True
+        return ans_payload
 
     async def end_interact(self) :
         """
