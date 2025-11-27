@@ -8,6 +8,7 @@ class MissionLink_Server :
 
     MSS = 1448  # 1500-20(IPv4 forcado no CORE sem options) - 8(Header UDP sem padding) - 21(MissionHeader)
     HANDSHAKE_TIMEOUT = 1
+    MAX_TRIES = 5
 
     async def start(self) :
         """
@@ -27,8 +28,6 @@ class MissionLink_Server :
         callback_data (callable): Function to handle received DATA messages
         callback_request (callable): Function to handle REQ messages and return response
         """
-        self.host                       = host                                              # Server's address
-        self.port                       = port                                              # Server's dock
         self.connections_id             = {}                                                # Dict {connection_ID: (addr, rtt)}
         self.seq_number                 = 0                                                 # Sequence Number
         self.pending                    = {}                                                # Dict {(connection_ID, seq): 'Pending' or (header, payload)}
@@ -39,7 +38,7 @@ class MissionLink_Server :
         self.socket                     = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Server's socket
         self.socket.bind((host,port))
         self.socket.setblocking(False)                                                      # Non-blocking socket
-        self.max_tries                  = 5                                                 # Max tries to timeout
+        self.max_tries                  = self.MAX_TRIES                                    # Max tries to timeout
         self.callback_data              = callback_data                                     # Callback for DATA messages
         self.callback_request           = callback_request                                  # Callback for REQ messages
         self.shutdown                   = False                                             # Shutdown flag

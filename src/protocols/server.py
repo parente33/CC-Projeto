@@ -11,10 +11,7 @@ async def main():
         port=50001
     )
 
-    mission = MissionLink_Server(
-        host="0.0.0.0",
-        port=50000
-    )
+    mission = MissionLink_Server()
 
     # Exemplo de callback Telemetry
     async def telemetry_rx(payload, addr):

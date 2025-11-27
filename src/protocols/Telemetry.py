@@ -26,7 +26,7 @@ class Telemetry:
 
         self.shutdown_flag = False
         self.inactivity_timeout = 60  # segundos sem receber dados
-        self.check_interval = 10      # verifica timeouts a cada 10s
+        self.check_interval = 30      # verifica timeouts a cada 10s
 
         # Cliente
         self.reader = None

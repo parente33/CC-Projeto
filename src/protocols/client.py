@@ -35,7 +35,7 @@ async def send_MissionLink_loop(missionLink: MissionLink_Client):
 
 async def main():
     telemetria = Telemetry(mode = "client", host = 'localhost')
-    missionLink = MissionLink_Client(host = 'localhost')
+    missionLink = MissionLink_Client(host = 'localhost', port = 50000)
 
     # Conectar ao servidor
     try:

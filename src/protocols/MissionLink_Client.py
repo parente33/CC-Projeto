@@ -60,7 +60,7 @@ class MissionLink_Client:
                     self.answer = (header, payload)
                     self.waiting = None
                     self.event.set()
-                    print("Recebi")
+
 
     async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes):
         """
@@ -98,7 +98,6 @@ class MissionLink_Client:
                 header.retr = MissionHeader.RETR                    # Set flag retransmit in message's header
                 message = header.pack() + (payload if payload is not None else b'')
                 self.socket.sendto(message, (self.host, self.port)) # Retransmit message
-                print("Mandei outra vez")
                 timeout += timeout*2**tries
                 continue
 
@@ -171,7 +170,6 @@ class MissionLink_Client:
         self.receive_task = asyncio.create_task(self.receiver())
 
         self.socket.sendto(syn_header.pack(),(self.host,self.port))
-        print("Mandei SYN")
         self.seq_number += 1
         result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None)
 
@@ -218,7 +216,6 @@ class MissionLink_Client:
 
         message = msg_header.pack() + payload
         self.socket.sendto(message,(self.host,self.port))
-        print("Mandei data")
         result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
         if result is None:
             raise RuntimeError(f"Message seq={seq} failed (timeout)")
@@ -256,13 +253,11 @@ class MissionLink_Client:
         )
         message = msg_header.pack() + payload
         self.socket.sendto(message,(self.host,self.port))
-        print("Mandei request")
         result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
         if result is None:
             raise RuntimeError(f"Message seq={seq} failed (timeout)")
 
         result =  await self.wait_data(MissionHeader.TYPE_DATA + req)
-        print("RECEBI DDATAAA")
         if result is None:
             raise RuntimeError(f"Message seq={seq} failed (timeout)")
         ans_header, ans_payload = result
@@ -288,8 +283,6 @@ class MissionLink_Client:
                 await self.receive_task
             except asyncio.CancelledError:
                 pass
-
-        # Close the socket to free resources
 
     async def kill_client(self) :
         self.socket.close()
