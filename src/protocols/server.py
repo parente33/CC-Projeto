@@ -1,7 +1,9 @@
 import asyncio
 from Telemetry import Telemetry
-from MissionLink_Server import MissionLink_Server
+from MissionLink_Server import *
 from cache import Cache
+from Mission import Mission_Status,Mission
+
 async def main():
 
     # --- Criar servidores ---
@@ -21,8 +23,8 @@ async def main():
 
     # Exemplo de callback MissionLink
     async def mission_rx(connection_ID, payload):
-        cache.get_Task()
-        
+        result:Mission_Status = Mission_Status.decode(payload)
+        print(result.message())
 
     async def mission_req(connection_ID, payload) :
         missao = await cache.get_Task()

@@ -8,16 +8,11 @@ async def send_telemetry_loop(client: Telemetry, rover:Rover):
     """Envia telemetria normal a cada 10s."""
     try:
         while True:
-            try:
-                payload = await rover.createReport()
-            except Exception as e:
-                print("Erro ao criar report:", e)
-                raise
+            payload = await rover.createReport()
             
-            interval = await rover.getAtualization_Interval()
             await client.send_telemetry(payload)
-            print(f"[CLIENT] Telemetria enviada {interval}")
-            await asyncio.sleep(interval)
+            print(f"[CLIENT] Telemetria enviada (10s)")
+            await asyncio.sleep(10)
 
     except asyncio.CancelledError:
         print("[CLIENT] Task de telemetria cancelada.")
@@ -26,8 +21,6 @@ async def send_telemetry_loop(client: Telemetry, rover:Rover):
 
 async def send_MissionLink_loop(missionLink: MissionLink_Client, rover:Rover):
 
-    
-
     try:
         while True:
             result:Mission = await missionLink.send_request(bytes([0b0001]))
@@ -35,9 +28,10 @@ async def send_MissionLink_loop(missionLink: MissionLink_Client, rover:Rover):
             print("[CLIENT] REQUEST ENVIADO E RECEBIDO")
             print(mission.message())
             await rover.setTask(mission)
-            await rover.doingTask()
+            await rover.doingTask(missionLink)
             print("[CLIENT] MissionLink enviado (60s)")
-            await asyncio.sleep(60)
+
+            await asyncio.sleep(3)
 
     except asyncio.CancelledError:
         print("[CLIENT] Task de MissionLink cancelada.")
