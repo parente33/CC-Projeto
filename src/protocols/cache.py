@@ -13,49 +13,12 @@ class TASK(Enum):
     ANALYSING_TERRAIN = 1
     REPAIRING_SATELITE = 2
 
-class TelemetryStream:
 
-    def __init__(self, rover_id:int, rover_status:int, rover_position:tuple[int,int]):
-        self.rover_id = rover_id
-        self.rover_status = rover_status
-        self.rover_position = rover_position
-
-    def decode(data: bytes):
-        offset = 0
-
-        rover_id = int.from_bytes(data[offset:offset+4], 'big')
-        offset += 4
-
-        rover_status = Status(int.from_bytes(data[offset:offset+4], 'big'))
-        offset += 4
-
-        position_length = int.from_bytes(data[offset:offset+2], 'big')
-        offset += 2
-
-        position = []
-
-        for _ in range(position_length):
-            value = int.from_bytes(data[offset:offset+4], 'big')
-            offset += 4
-            position.append(value)
-        tuple(position)
-
-        return TelemetryStream(rover_id,rover_status,position)
-
-    def encode(self):
-        data = bytearray()
-        data += self.rover_id.to_bytes(length=4,byteorder='big')
-        data += self.rover_status.value.to_bytes(length=4,byteorder='big')
-        data += self.rover_position.__len__().to_bytes(length=2,byteorder='big')
-        data += self.rover_position[0].to_bytes(length=2,byteorder='big')
-        data += self.rover_position[1].to_bytes(length=2,byteorder='big')
-
-        return data
         
         
 
 
-class protocolMissionLink:
+class Mission:
     def __init__(self, rover_id:int, mission_id:int, geographic_area:tuple[int,int,int], task:int, max_duration: int, atualizations_interval: int):
         self.rover_id = rover_id
         self.mission_id = mission_id
@@ -114,7 +77,7 @@ class protocolMissionLink:
         atualization_interval = int.from_bytes(data[offset:offset+4], 'big')
         offset += 4
 
-        return protocolMissionLink(
+        return Mission(
             rover_id,
             mission_id,
             tuple(geographic_area),
@@ -126,7 +89,7 @@ class protocolMissionLink:
 
 class Cache:
     def __init__(self):
-        with open("../csv_files/missions.csv", newline='', encoding="utf-8") as f:
+        with open("missions.csv", newline='', encoding="utf-8") as f:
             reader = csv.DictReader(f)
             self.tasks = list()
             for row in reader:
@@ -137,8 +100,8 @@ class Cache:
                 max_duration = int(row["max_duration"])
                 atualizations_interval = int(row["atualization_interval"])
 
-                ml = protocolMissionLink(rover_id, mission_id, geographic_area, task, max_duration, atualizations_interval)
+                ml = Mission(rover_id, mission_id, geographic_area, task, max_duration, atualizations_interval)
                 self.tasks.append(ml)
 
-    def get_Task(self):
+    async def get_Task(self) -> Mission:
         return self.tasks.pop(0)
