@@ -1,36 +1,36 @@
 import asyncio
-from Telemetry import Telemetry
-from MissionLink_Server import *
-from cache import Cache
-from Mission import Mission_Status,Mission
+from protocols.Telemetry import Telemetry
+from protocols.MissionLink_Server import MissionLink_Server
+from Mission import Mission
+from Database import Database
+from Message import *
 
-async def main():
-
-    # --- Criar servidores ---
-    telemetry = Telemetry(
+bd = Database() #Inicia a base de dados e cria as tabelas
+mission = MissionLink_Server()
+telemetry = Telemetry(
         mode="server",
         host="localhost",
         port=50001
     )
-    cache = Cache()
-    mission = MissionLink_Server()
 
-    # Exemplo de callback Telemetry
-    async def telemetry_rx(payload, addr):
-        print(f"[TELEMETRY] Recebido de {addr}: {payload}")
+async def telemetry_rx(payload, addr):
+    result:Message_Telemetry = await Message_Telemetry.decode(payload)
+    bd.insert_or_update_rover(result)
+    print("Telemetry carregada")
 
+async def mission_rx(connection_ID, payload):
+    result:Message_Status = Message_Status.decode(payload)
+    bd.insert_rover_mission(result)
+    print("Informaçao missao carregada")
+
+async def mission_req(connection_ID, payload) :
+    missao : Mission = bd.get_mission()
+    print("Request recebido " + missao.message())
+    return missao.encode()
+
+async def main():
+    bd.load_missions_from_csv("missions.csv")
     telemetry.callback_data = telemetry_rx
-
-    # Exemplo de callback MissionLink
-    async def mission_rx(connection_ID, payload):
-        result:Mission_Status = Mission_Status.decode(payload)
-        print(result.message())
-
-    async def mission_req(connection_ID, payload) :
-        missao = await cache.get_Task()
-        print(missao.message())
-        return missao.encode()
-
     mission.callback_data = mission_rx
     mission.callback_request = mission_req
 

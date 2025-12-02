@@ -1,7 +1,7 @@
 import socket
 import asyncio
 import secrets
-from MissionHeader import MissionHeader
+from .MissionHeader import MissionHeader
 import time
 
 class MissionLink_Server :
@@ -115,7 +115,6 @@ class MissionLink_Server :
                 addr, rtt = self.connections_id[connection_ID]
                 packet = header.pack() + (payload if payload is not None else b'')
                 self.socket.sendto(packet, addr)
-
                 # Only wait for ACKs on DATA messages
                 if header.type == MissionHeader.TYPE_DATA :
                     asyncio.create_task(self.wait_acks(connection_ID, seq, header, payload))

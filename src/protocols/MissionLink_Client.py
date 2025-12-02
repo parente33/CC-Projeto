@@ -1,14 +1,14 @@
 import socket
-from MissionHeader import MissionHeader
+from .MissionHeader import MissionHeader
 import time
 import asyncio
 
 
 class MissionLink_Client:
     MSS = 1448                          # 1500-20(IPv4 forçado no CORE sem options) - 8(Header UDP sem padding) - 24(MissionHeader)
-    HANDSHAKE_TIMEOUT = 1
+    HANDSHAKE_TIMEOUT = 5
 
-    def __init__(self, host = 'localhost', port = 50000):
+    def __init__(self, host, port = 50000):
         self.host         =   host                                            # Server's adress
         self.port         = port                                              # Server's dock
         self.max_tries    = 5                                                 # Max tries to timeout
@@ -62,7 +62,7 @@ class MissionLink_Client:
                     self.event.set()
 
 
-    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes):
+    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes, is_handshake = 0):
         """
         Waits for server's acks and retransmit message
 
@@ -100,14 +100,13 @@ class MissionLink_Client:
                 self.socket.sendto(message, (self.host, self.port)) # Retransmit message
                 timeout += timeout*2**tries
                 continue
-
         #Received the rigth answer
         end = time.time()
 
         ans_header,ans_payload = self.answer
 
-        if ans_header.retr == MissionHeader.DEF:
-            self.set_RTT(end - start)
+        if ans_header.retr == MissionHeader.DEF and is_handshake == 0:
+            self.set_RTT(end-start)
 
         return (ans_header,ans_payload)
 
@@ -132,7 +131,6 @@ class MissionLink_Client:
 
         tries = 0
         timeout = self.RTO
-        start = time.time()
 
         while self.waiting is not None:
             try:
@@ -145,14 +143,8 @@ class MissionLink_Client:
                 timeout += timeout*2**tries
                 continue
         # Recebeu a resposta correta
-        end = time.time()
 
         ans_header,ans_payload = self.answer
-
-        # Atualiza RTT só se NÃO foi retransmissão
-        if ans_header.retr == MissionHeader.DEF:
-            self.set_RTT(end - start)
-
         return (ans_header, ans_payload)
 
     async def handle_handshake(self):
@@ -171,7 +163,7 @@ class MissionLink_Client:
 
         self.socket.sendto(syn_header.pack(),(self.host,self.port))
         self.seq_number += 1
-        result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None)
+        result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None,is_handshake=1)
 
         if result is None:
             raise RuntimeError("Handshake failed: no SYNACK received")
@@ -213,7 +205,6 @@ class MissionLink_Client:
             length=len(payload),
             type = MissionHeader.TYPE_DATA
         )
-
         message = msg_header.pack() + payload
         self.socket.sendto(message,(self.host,self.port))
         result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
@@ -222,7 +213,6 @@ class MissionLink_Client:
         #TERMINAR A RELAÇAO COM FYN
 
         await self.end_interact()
-        print("Terminado com sucesso")
         return True
 
     async def send_request (self,payload) : # Aqui tem de vir payload para futuro se tivermos requests de varios tipos

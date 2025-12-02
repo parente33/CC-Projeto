@@ -1,0 +1,4 @@
+mission_id,geographic_area,task,max_duration,atualization_interval
+1,"(5, 6, 1)","Clean_Area",30,15
+2,"(7, 4, 1)","Analysing_Terrain",40,20
+3,"(6, 2, 1)","Repairing_Satelite",20,10
