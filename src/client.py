@@ -27,8 +27,6 @@ async def send_MissionLink_loop(missionLink: MissionLink_Client, rover:Rover):
             print("[CLIENT] REQUEST ENVIADO E RECEBIDO")
             await rover.setTask(mission)
             await rover.doingTask(missionLink)
-            print("[CLIENT] MissionLink enviado (60s)")
-
             await asyncio.sleep(3)
 
     except asyncio.CancelledError:

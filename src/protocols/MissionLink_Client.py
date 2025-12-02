@@ -62,7 +62,7 @@ class MissionLink_Client:
                     self.event.set()
 
 
-    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes, is_handshake = 0):
+    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes, is_handshake = 0, is_request =0):
         """
         Waits for server's acks and retransmit message
 
@@ -105,10 +105,12 @@ class MissionLink_Client:
 
         ans_header,ans_payload = self.answer
 
-        if ans_header.retr == MissionHeader.DEF and is_handshake == 0:
+        if ans_header.retr == MissionHeader.DEF and is_handshake == 0 and is_request == 0:
             self.set_RTT(end-start)
 
         return (ans_header,ans_payload)
+
+
 
     async def wait_data(self,req : bytes) :
         """
@@ -143,7 +145,6 @@ class MissionLink_Client:
                 timeout += timeout*2**tries
                 continue
         # Recebeu a resposta correta
-
         ans_header,ans_payload = self.answer
         return (ans_header, ans_payload)
 
@@ -243,7 +244,7 @@ class MissionLink_Client:
         )
         message = msg_header.pack() + payload
         self.socket.sendto(message,(self.host,self.port))
-        result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
+        result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload, is_request = 1)
         if result is None:
             raise RuntimeError(f"Message seq={seq} failed (timeout)")
 

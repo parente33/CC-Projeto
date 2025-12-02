@@ -68,7 +68,6 @@ class Rover:
             payload = mission_status.encode()
 
             await missionLink.send_message(payload)
-
             await asyncio.sleep(self.task.atualization_interval)
 
             self.positions = await self.doMove(
