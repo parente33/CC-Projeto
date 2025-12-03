@@ -34,8 +34,8 @@ class Message_Telemetry :
         data += self.rover_id.to_bytes(length=4,byteorder='big')
         data += self.rover_status.to_bytes(length=4,byteorder='big')
         data += self.rover_position.__len__().to_bytes(length=2,byteorder='big')
-        data += self.rover_position[0].to_bytes(length=2,byteorder='big')
-        data += self.rover_position[1].to_bytes(length=2,byteorder='big')
+        data += self.rover_position[0].to_bytes(length=4,byteorder='big')
+        data += self.rover_position[1].to_bytes(length=4,byteorder='big')
 
         return data
 
