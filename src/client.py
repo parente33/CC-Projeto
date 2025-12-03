@@ -2,6 +2,7 @@ import asyncio
 from protocols.Telemetry import Telemetry
 from protocols.MissionLink_Client import MissionLink_Client
 from rover import *
+import random 
 
 async def send_telemetry_loop(client: Telemetry, rover:Rover):
     """Envia telemetria normal a cada 10s."""
@@ -37,7 +38,7 @@ async def send_MissionLink_loop(missionLink: MissionLink_Client, rover:Rover):
 async def main():
     telemetria = Telemetry(mode = "client", host = 'localhost')
     missionLink = MissionLink_Client(host = 'localhost', port = 50000)
-    rover = Rover(1) #Exemplo, cada rover tera o seu IP
+    rover = Rover(random.randint(1,1000)) #Exemplo, cada rover tera o seu IP
     # Conectar ao servidor
     try:
         await telemetria.connect()
@@ -48,6 +49,7 @@ async def main():
     # Criar tasks das rotinas
     telemetry_task = asyncio.create_task(send_telemetry_loop(telemetria,rover))
     MissionLink_task = asyncio.create_task(send_MissionLink_loop(missionLink,rover))
+    
 
     print("[CLIENT] Cliente iniciado. CTRL+C para parar.")
 

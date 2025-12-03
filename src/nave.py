@@ -1,11 +1,47 @@
 import asyncio
+import json
 from protocols.Telemetry import Telemetry
 from protocols.MissionLink_Server import MissionLink_Server
 from Mission import Mission
-from Database import Database
 from Message import *
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from Database import Database
+import threading
 
 bd = Database() #Inicia a base de dados e cria as tabelas
+
+class ObservationApi(BaseHTTPRequestHandler):
+
+    @classmethod
+    def start_ObservationApi(_class_):
+        server = HTTPServer(("localhost",8000),_class_)
+        print("Servidor rodando em http://localhost:8000")
+        server.serve_forever()
+    
+    def json_data(self,data, code=200):
+        """
+        Função para enviar data na forma de json 
+        """
+        self.send_response(code)
+        self.send_header("Content-Type","application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode("utf-8"))
+    
+    def do_GET(self):
+        if self.path == "/active_rovers":
+            rovers = bd.get_rovers()
+            self.json_data(rovers)
+
+        if self.path == "/missions":
+            missions = bd.get_missions()
+            self.json_data(missions)
+        
+        if self.path == "/reports":
+            reports = bd.get_RoversMissions()
+            self.json_data(reports)
+             
+
 mission = MissionLink_Server()
 telemetry = Telemetry(
         mode="server",
@@ -37,6 +73,8 @@ async def main():
     # --- Criar tasks ---
     t1 = asyncio.create_task(telemetry.start_server())
     t2 = asyncio.create_task(mission.start())
+    threading.Thread(target=ObservationApi.start_ObservationApi, daemon=True).start()
+
 
     print("[SERVERS] Telemetry e MissionLink iniciados. CTRL+C para parar.")
 

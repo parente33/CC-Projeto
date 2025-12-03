@@ -13,6 +13,7 @@ class Database:
     def __init__(self, db_path: str = "database.db"):
         try:
             self.__connection = sqlite3.connect(db_path, check_same_thread=False)
+            self.__connection.row_factory = sqlite3.Row
 
             # TABLE: missions
             self.__execute_sql('''
@@ -108,6 +109,18 @@ class Database:
 
         return Mission(row[0],row[1],row[2],row[3],row[4])
 
+    def get_missions(self) -> dict:
+        sql = "SELECT * FROM missions"
+        cursor = self.__execute_sql(sql)
+        rows = cursor.fetchall()
+
+        if rows is None:
+            return [{}]
+        
+        missions = [dict(row) for row in rows]
+        
+        return missions
+
     # -------------------- Rover --------------------
     def insert_or_update_rover(self, telemetry: Message_Telemetry):
         sql = """
@@ -120,6 +133,21 @@ class Database:
         """
         self.__execute_sql(sql, (telemetry.rover_id, status_dict[telemetry.rover_status], str(telemetry.rover_position)))
 
+
+    def get_rovers(self) -> dict:
+        """
+        Devolve um dicionário com todas as entradas da tabela rover
+        """
+        sql = "SELECT * FROM rover"
+        cursor = self.__execute_sql(sql)
+        rows = cursor.fetchall()
+
+        if rows is None:
+            return [{}]
+
+        rovers = [dict(row) for row in rows] 
+        return rovers
+
     # -------------------- Rover Mission --------------------
     def insert_rover_mission(self,result : Message_Status):
         sql = """
@@ -128,3 +156,15 @@ class Database:
             VALUES (?, ?, ?, ?, ?);
         """
         self.__execute_sql(sql, (result.rover_id, result.mission_id, status_dict[result.status],result.current_duration,result.completion))
+    
+    def get_RoversMissions(self):
+        sql = "SELECT * FROM rover_mission"
+        cursor = self.__execute_sql(sql)
+
+        rows = cursor.fetchall()
+
+        if rows is None:
+            return [{}]
+
+        rovers_missions = [dict(row) for row in rows] 
+        return rovers_missions
