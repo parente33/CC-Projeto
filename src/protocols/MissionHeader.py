@@ -1,7 +1,7 @@
 import struct
 
 class MissionHeader:
-    size = 24  #tamanho do header A DEFINIR
+    size = 18  #tamanho do header A DEFINIR
     # Definir typess como constantes
     TYPE_ACK    = 0b00000001
     TYPE_SYN    = 0b00000010
@@ -14,14 +14,12 @@ class MissionHeader:
     RETR = 0b00000001  # RETRANSMITIDO
     DEF  = 0b00000000  #DEFAULT
 
-    def __init__(self, connection_ID = 0, seq_number = 0, ack_number = 0, type = TYPE_DATA, length = 0,offset = 0,frag_ID = 0, retr = DEF, req_number = 0):
+    def __init__(self, connection_ID = 0, seq_number = 0, ack_number = 0, type = TYPE_DATA, length = 0, retr = DEF, req_number = 0):
         self.connection_ID  = connection_ID                   # 4 bytes
         self.seq_number     = seq_number                      # 4 bytes
         self.ack_number     = ack_number                      # 4 bytes
         self.type           = type                            # 1 byte
         self.length         = length + MissionHeader.size     # 2 bytes Original antes da fragmentaçao
-        self.frag_ID        = frag_ID                         # 4 bytes
-        self.offset         = offset                          # 2 bytes
         self.retr           = retr                            # 1 byte
         self.req_number     = req_number                      # 2 bytes
 
@@ -29,14 +27,12 @@ class MissionHeader:
         """
         Converte os campos do header em bytes prontos para enviar via socket.
         """
-        return struct.pack('!IIIBHIHBH',
+        return struct.pack('!IIIBHBH',
                            self.connection_ID,
                            self.seq_number,
                            self.ack_number,
                            self.type,
                            self.length,
-                           self.frag_ID,
-                           self.offset,
                            self.retr,
                            self.req_number
                            )
@@ -46,7 +42,7 @@ class MissionHeader:
         """
         Recebe bytes e reconstrói o header original.
         """
-        connection_ID,seq_number,ack_number,flags,length,frag_ID,offset, retr, req_number = struct.unpack('!IIIBHIHBH', data)
-        return MissionHeader(connection_ID, seq_number, ack_number,  flags,length,frag_ID, offset, retr, req_number)
+        connection_ID,seq_number,ack_number,flags,length, retr, req_number = struct.unpack('!IIIBHBH', data)
+        return MissionHeader(connection_ID, seq_number, ack_number,  flags,length,retr, req_number)
 
 

@@ -2,7 +2,7 @@ import asyncio
 from protocols.Telemetry import Telemetry
 from protocols.MissionLink_Client import MissionLink_Client
 from rover import *
-import random 
+import random
 
 async def send_telemetry_loop(client: Telemetry, rover:Rover):
     """Envia telemetria normal a cada 10s."""
@@ -49,7 +49,7 @@ async def main():
     # Criar tasks das rotinas
     telemetry_task = asyncio.create_task(send_telemetry_loop(telemetria,rover))
     MissionLink_task = asyncio.create_task(send_MissionLink_loop(missionLink,rover))
-    
+
 
     print("[CLIENT] Cliente iniciado. CTRL+C para parar.")
 
@@ -83,4 +83,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n[MAIN] Cliente encerrado.")
