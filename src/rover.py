@@ -7,8 +7,7 @@ from Message import *
 status_dict = {
     0 : "Waiting",
     1 : "In Mission",
-    2 : "Walking",
-    3 : "Sleep"
+    2 : "Walking"
 }
 
 class Rover:
@@ -30,8 +29,6 @@ class Rover:
             await asyncio.sleep(0.1)
 
         return self.task.atualization_interval
-
-
 
 
     async def doMove(self,current_position: tuple[int, int], objective_position: tuple[int, int], raio: int, time_passed: int):
