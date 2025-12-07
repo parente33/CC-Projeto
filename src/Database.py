@@ -28,7 +28,8 @@ class Database:
                     geographic_area TEXT,
                     task TEXT,
                     max_duration INTEGER,
-                    atualization_interval INTEGER
+                    atualization_interval INTEGER,
+                    status TEXT
                 );
             ''')
 
@@ -76,8 +77,8 @@ class Database:
     async def insert_mission(self, mission: dict):
         sql = """
             INSERT OR REPLACE INTO missions
-            (mission_id, geographic_area, task, max_duration, atualization_interval)
-            VALUES (?, ?, ?, ?, ?);
+            (mission_id, geographic_area, task, max_duration, atualization_interval,status)
+            VALUES (?, ?, ?, ?, ?, ?);
         """
         values = (
             mission["mission_id"],
@@ -85,6 +86,7 @@ class Database:
             mission["task"],
             mission["max_duration"],
             mission["atualization_interval"],
+            mission_status_dict[0]
         )
         await self.__execute_sql(sql, values)
 
@@ -103,8 +105,8 @@ class Database:
             raise DatabaseException() from e
 
     async def get_mission(self) -> Mission | None:
-        sql = "SELECT mission_id, geographic_area, task, max_duration, atualization_interval FROM missions ORDER BY RANDOM() LIMIT 1;"
-        cursor = await self.__execute_sql(sql)
+        sql = "SELECT mission_id, geographic_area, task, max_duration, atualization_interval FROM missions WHERE status=? ORDER BY RANDOM() LIMIT 1;"
+        cursor = await self.__execute_sql(sql,(mission_status_dict[0],))
 
         row = await cursor.fetchone()
         if row is None:
@@ -121,6 +123,12 @@ class Database:
             return [{}]
 
         return [dict(row) for row in rows]
+
+    async def update_missions(self,mission_id,status):
+        sql = "UPDATE missions SET status = ? Where mission_id = ?"
+        await self.__execute_sql(sql,(mission_status_dict[status], mission_id))
+    
+
 
     # -------------------- Rover --------------------
     async def insert_or_update_rover(self, telemetry: Message_Telemetry):

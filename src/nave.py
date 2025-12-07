@@ -59,7 +59,12 @@ async def mission_rx(connection_ID, payload):
     print("Informaçao missao carregada")
 
 async def mission_req(connection_ID, payload) :
+    mission_id = int.from_bytes(payload[0:4])
+    if mission_id != 0:
+        await bd.update_missions(int.from_bytes(payload[0:4], 'big'),2)
+
     missao : Mission = await bd.get_mission()
+    await bd.update_missions(missao.mission_id, 1)
     print("Request recebido " + missao.message())
     return missao.encode()
 

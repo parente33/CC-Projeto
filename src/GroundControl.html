@@ -34,6 +34,7 @@
                         <th>Task</th>
                         <th>Max Duration</th>
                         <th>Atualization Interval</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -64,7 +65,7 @@
 
                 result = await fetch("http://localhost:8000/missions");
                 let missions = await result.json();
-                populateTable("missions-table", missions, ["mission_id","geographic_area","task","max_duration","atualization_interval"]);
+                populateTable("missions-table", missions, ["mission_id","geographic_area","task","max_duration","atualization_interval","status"]);
 
                 result = await fetch("http://localhost:8000/reports");
                 let reports = await result.json();

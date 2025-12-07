@@ -1,9 +1,15 @@
 import ast
+import enum
 
+mission_status_dict = {
+    0 : "Inactive",
+    1 : "Started",
+    2 : "Completed"
+}
 
 
 class Mission:
-    def __init__(self,mission_id:int, geographic_area: str|tuple, task:str, max_duration: int, atualization_interval: int):
+    def __init__(self,mission_id:int, geographic_area: str|tuple, task:str, max_duration: int, atualization_interval: int, status:int = 0):
         self.mission_id = mission_id
         if isinstance(geographic_area, str):
             self.geographic_area = ast.literal_eval(geographic_area)
@@ -12,6 +18,7 @@ class Mission:
         self.task = task
         self.max_duration = max_duration
         self.atualization_interval = atualization_interval
+        self.status = status
 
     def message(self):
         message = f"{self.mission_id},{self.geographic_area},{self.task},{self.max_duration},{self.atualization_interval}"
@@ -33,6 +40,7 @@ class Mission:
 
         data += self.max_duration.to_bytes(length=4,byteorder='big')
         data += self.atualization_interval.to_bytes(length=4,byteorder='big')
+        data += self.status.to_bytes(length=4, byteorder='big')
 
         return bytes(data)
 
@@ -67,10 +75,14 @@ class Mission:
         atualization_interval = int.from_bytes(data[offset:offset+4], 'big')
         offset += 4
 
+        status = int.from_bytes(data[offset:offset+4],'big')
+        offset += 4
+
         return Mission(
             mission_id,
             tuple(geographic_area),
             task,
             max_duration,
-            atualization_interval
+            atualization_interval,
+            status
         )

@@ -23,7 +23,11 @@ async def send_MissionLink_loop(missionLink: MissionLink_Client, rover:Rover):
 
     try:
         while True:
-            result:Mission = await missionLink.send_request(bytes([0b0001]))
+            if rover.task != None:
+                result:Mission = await missionLink.send_request(rover.task.mission_id.to_bytes(length=4,byteorder='big'))
+            else:
+                payload = bytes(4)
+                result:Mission = await missionLink.send_request(payload)
             mission:Mission = Mission.decode(result)
             print("[CLIENT] REQUEST ENVIADO E RECEBIDO")
             await rover.setTask(mission)
