@@ -1,7 +1,8 @@
 import asyncio
-from Mission import *
+from common.Mission import *
 from protocols.MissionLink_Client import *
-from Message import *
+from protocols.Telemetry import *
+from common.Message import *
 
 
 status_dict = {
@@ -88,3 +89,39 @@ class Rover:
     async def createReport(self):
         report = Message_Telemetry(self.id,self.status,self.positions)
         return await report.encode()
+
+
+
+    async def send_telemetry_loop(self, client: Telemetry):
+        """Envia telemetria normal a cada 10s."""
+        try:
+            while True:
+                payload = await self.createReport()
+
+                await client.send_telemetry(payload)
+                print(f"[CLIENT] Telemetria enviada (10s)")
+                await asyncio.sleep(10)
+
+        except asyncio.CancelledError:
+            print("[CLIENT] Task de telemetria cancelada.")
+            raise
+
+
+    async def send_MissionLink_loop(self,missionLink: MissionLink_Client):
+
+        try:
+            while True:
+                if self.task != None:
+                    result:Mission = await missionLink.send_request(self.task.mission_id.to_bytes(length=4,byteorder='big'))
+                else:
+                    payload = bytes(4)
+                    result:Mission = await missionLink.send_request(payload)
+                mission:Mission = Mission.decode(result)
+                print("[CLIENT] REQUEST ENVIADO E RECEBIDO")
+                await self.setTask(mission)
+                await self.doingTask(missionLink)
+                await asyncio.sleep(3)
+
+        except asyncio.CancelledError:
+            print("[CLIENT] Task de MissionLink cancelada.")
+            raise

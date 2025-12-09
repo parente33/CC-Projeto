@@ -1,9 +1,9 @@
 import aiosqlite
 from typing import Any
 import csv
-from Message import *
-from Mission import *
-from rover import status_dict
+from common.Message import *
+from common.Mission import *
+from rover.Rover import status_dict
 
 
 class DatabaseException(Exception):
@@ -11,9 +11,8 @@ class DatabaseException(Exception):
 
 
 class Database:
-    def __init__(self, db_path: str = "database.db"):
+    def __init__(self, db_path: str = "../files/database.db"):
         self.db_path = db_path
-        self.__connection: aiosqlite.Connection | None = None
 
     # -------------------- Initialization --------------------
     async def init(self):
@@ -36,7 +35,8 @@ class Database:
             # TABLE: rover
             await self.__execute_sql('''
                 CREATE TABLE IF NOT EXISTS rover (
-                    rover_id INTEGER PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rover_id INTEGER,
                     status TEXT,
                     position TEXT,
                     last_update DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -68,10 +68,11 @@ class Database:
 
         try:
             cursor = await self.__connection.execute(sql, data)
-            await self.__connection.commit()
             return cursor
         except aiosqlite.Error as e:
             raise DatabaseException() from e
+        finally :
+            await self.__connection.commit()
 
     # -------------------- Missions --------------------
     async def insert_mission(self, mission: dict):
@@ -127,7 +128,7 @@ class Database:
     async def update_missions(self,mission_id,status):
         sql = "UPDATE missions SET status = ? Where mission_id = ?"
         await self.__execute_sql(sql,(mission_status_dict[status], mission_id))
-    
+
 
 
     # -------------------- Rover --------------------
@@ -135,10 +136,6 @@ class Database:
         sql = """
             INSERT INTO rover (rover_id, status, position, last_update)
             VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(rover_id) DO UPDATE SET
-                status=excluded.status,
-                position=excluded.position,
-                last_update=CURRENT_TIMESTAMP;
         """
         await self.__execute_sql(sql, (
             telemetry.rover_id,
@@ -180,3 +177,6 @@ class Database:
             return [{}]
 
         return [dict(row) for row in rows]
+
+    async def close(self) :
+        await self.__connection._stop_running()
