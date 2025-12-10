@@ -8,7 +8,7 @@ class Telemetry:
     Cliente envia telemetria, servidor apenas recebe
     """
 
-    def __init__(self, mode='client', host ='localhost', port=50001):
+    def __init__(self, mode='client', host ='localhost', port=50001, callback_data = None):
         """
         Inicializa o protocolo Telemetry
         Args:
@@ -22,7 +22,7 @@ class Telemetry:
 
         self.active_clients = {}  # {addr: {'reader': reader, 'writer': writer, 'last_activity': timestamp}}
 
-        self.callback_data = None
+        self.callback_data = callback_data
 
         self.shutdown_flag = False
         self.inactivity_timeout = 60  # segundos sem receber dados
@@ -36,6 +36,7 @@ class Telemetry:
         self.server = None
         self.server_task = None
         self.timeout_checker_task = None
+        self.callback_tasks = set()
 
 
     async def connect(self):
@@ -144,11 +145,12 @@ class Telemetry:
                 self.active_clients[addr]['last_activity'] = time.time()
 
                 # Callback de dados recebidos
-                if self.callback_data:
-                    if asyncio.iscoroutinefunction(self.callback_data):
-                        asyncio.create_task(self.callback_data(data, addr))
-                    else:
-                        self.callback_data(data, addr)
+                if self.callback_data and asyncio.iscoroutinefunction(self.callback_data):
+                    task = asyncio.create_task(self.callback_data(data, addr))
+                    self.callback_tasks.add(task)
+                    task.add_done_callback(lambda t: self.callback_tasks.discard(t))
+                else:
+                    self.callback_data(data, addr)
 
         except Exception as e:
             print(f"[Telemetry Server] Erro com cliente {addr}: {e}")
@@ -268,7 +270,9 @@ class Telemetry:
                     await self.server_task
                 except asyncio.CancelledError:
                     pass
-
+            if self.callback_tasks:
+                print(f"[Telemetry] Aguardando {len(self.callback_tasks)} callbacks pendentes...")
+                await asyncio.gather(*self.callback_tasks, return_exceptions=True)
         else:  # cliente
             await self.disconnect()
 

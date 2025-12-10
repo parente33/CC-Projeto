@@ -41,7 +41,7 @@ class MissionLink_Server :
         self.max_tries                  = self.MAX_TRIES                                    # Max tries to timeout
         self.callback_data              = callback_data                                     # Callback for DATA messages
         self.callback_request           = callback_request                                  # Callback for REQ messages
-        self.shutdown                   = False                                             # Shutdown flag
+        self.shutdown_flag              = False                                             # Shutdown flag
 
     async def wait_acks(self, connection_ID : int, seq:bytes, header : MissionHeader, payload : bytes):
         """
@@ -102,7 +102,7 @@ class MissionLink_Server :
         """
         Loop to send messages to clients from the send queue
         """
-        while not self.shutdown:
+        while not self.shutdown_flag:
                 try:
                     (header, payload) = await asyncio.wait_for(self.send_queue.get(), timeout=0.1)
                 except asyncio.TimeoutError:
@@ -215,7 +215,7 @@ class MissionLink_Server :
         Loop to receive messages from clients
         """
         loop = asyncio.get_event_loop()
-        while not self.shutdown:
+        while not self.shutdown_flag:
             try:
                 data, addr = await asyncio.wait_for(
                     loop.sock_recvfrom(self.socket, MissionHeader.size + MissionLink_Server.MSS),
@@ -241,16 +241,17 @@ class MissionLink_Server :
             if not has_pending and queue_empty:
                 break
 
-            await asyncio.sleep(0.1)
 
         print("All operations complete. Shutting down...")
-        self.shutdown = True
+        self.shutdown_flag = True
 
-        # Wait for tasks to finish
-        if self.send_task:
-            await self.send_task
         if self.receive_task:
-            await self.receive_task
-
+            self.receive_task.cancel()
+        if self.send_task:
+            self.send_task.cancel()
+        try:
+            await asyncio.gather(self.receive_task, self.send_task, return_exceptions=True)
+        except Exception:
+            pass
         self.socket.close()
         print("Server ended successfully")

@@ -13,6 +13,7 @@ class DatabaseException(Exception):
 class Database:
     def __init__(self, db_path: str = "../files/database.db"):
         self.db_path = db_path
+        self.closed = False
 
     # -------------------- Initialization --------------------
     async def init(self):
@@ -179,4 +180,5 @@ class Database:
         return [dict(row) for row in rows]
 
     async def close(self) :
-        await self.__connection._stop_running()
+        self.closed = True
+        await self.__connection.close()

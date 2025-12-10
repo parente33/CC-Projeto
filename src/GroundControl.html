@@ -1,8 +1,7 @@
-
 <!DOCTYPE html>
 <html>
     <head>
-        <title> Ground Control </title>
+        <title>Ground Control</title>
         <style>
             table { border-collapse: collapse; width: 80%; margin-bottom: 20px; }
             th, td { border: 1px solid #333; padding: 8px; text-align: left; }
@@ -13,63 +12,75 @@
         <h1>GroundControl</h1>
 
         <h2>Rovers</h2>
-            <table id="rover-table">
-                <thead>
-                    <tr>
-                        <th>Rover ID</th>
-                        <th>Status</th>
-                        <th>Position</th>
-                        <th>Last Update</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <table id="rover-table">
+            <thead>
+                <tr>
+                    <th>Rover ID</th>
+                    <th>Status</th>
+                    <th>Position</th>
+                    <th>Last Update</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
 
         <h2>Missions</h2>
-            <table id="missions-table">
-                <thead>
-                    <tr>
-                        <th>Mission ID</th>
-                        <th>Geographic Area</th>
-                        <th>Task</th>
-                        <th>Max Duration</th>
-                        <th>Atualization Interval</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <table id="missions-table">
+            <thead>
+                <tr>
+                    <th>Mission ID</th>
+                    <th>Geographic Area</th>
+                    <th>Task</th>
+                    <th>Max Duration</th>
+                    <th>Atualization Interval</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
 
         <h2>Reports</h2>
-            <table id="reports-table">
-                <thead>
-                    <tr>
-                        <th>Report ID</th>
-                        <th>Rover ID</th>
-                        <th>Mission ID</th>
-                        <th>Mission Status</th>
-                        <th>Current Duration</th>
-                        <th>Completion</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <table id="reports-table">
+            <thead>
+                <tr>
+                    <th>Report ID</th>
+                    <th>Rover ID</th>
+                    <th>Mission ID</th>
+                    <th>Mission Status</th>
+                    <th>Current Duration</th>
+                    <th>Completion</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
 
         <script>
+            async function fetchJson(url) {
+                const response = await fetch(url, {
+                    method: "GET",
+                    mode: "cors"
+                });
+                return response.json();
+            }
+
             async function fetchData() {
+                const rovers = await fetchJson("http://localhost:8000/active_rovers");
+                populateTable("rover-table", rovers,
+                    ["rover_id", "status", "position", "last_update"]
+                );
 
-                let result = await fetch("http://localhost:8000/active_rovers");
-                let rovers = await result.json();
-                populateTable("rover-table", rovers, ["rover_id","status","position","last_update"]);
+                const missions = await fetchJson("http://localhost:8000/missions");
+                populateTable("missions-table", missions,
+                    ["mission_id", "geographic_area", "task",
+                     "max_duration", "atualization_interval", "status"]
+                );
 
-                result = await fetch("http://localhost:8000/missions");
-                let missions = await result.json();
-                populateTable("missions-table", missions, ["mission_id","geographic_area","task","max_duration","atualization_interval","status"]);
-
-                result = await fetch("http://localhost:8000/reports");
-                let reports = await result.json();
-                populateTable("reports-table", reports, ["id","rover_id","mission_id","mission_status","current_duration","completion","timestamp"]);
+                const reports = await fetchJson("http://localhost:8000/reports");
+                populateTable("reports-table", reports,
+                    ["id", "rover_id", "mission_id", "mission_status",
+                     "current_duration", "completion", "timestamp"]
+                );
             }
 
             function populateTable(tableId, data, columns) {

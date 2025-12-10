@@ -1,23 +1,21 @@
 from .Nave import *
-import threading
+from .ObservationApi import *
+import asyncio
 
 async def main():
-    await bd.init()
-    await bd.load_missions_from_csv("../files/missions.csv")
-    telemetry.callback_data = telemetry_rx
-    mission.callback_data = mission_rx
-    mission.callback_request = mission_req
-
+    nave = Nave()
+    await nave.bd.init()
+    await nave.bd.load_missions_from_csv("../files/missions.csv")
     # --- Criar tasks ---
-    t1 = asyncio.create_task(telemetry.start_server())
-    t2 = asyncio.create_task(mission.start())
-    threading.Thread(target=ObservationApi.start_ObservationApi, daemon = True).start()
+    t1 = asyncio.create_task(nave.telemetry.start_server())
+    t2 = asyncio.create_task(nave.mission.start())
+    t3 = asyncio.create_task(ObservationApi.init())
 
 
     print("[SERVERS] Telemetry e MissionLink iniciados. CTRL+C para parar.")
 
     try:
-        await asyncio.gather(t1, t2)
+        await asyncio.gather(t1, t2,t3)
 
     except asyncio.CancelledError:
         print("\n[SHUTDOWN] A terminar servidores...")
@@ -25,10 +23,9 @@ async def main():
     finally:
         # Encerrar Telemetry
         try:
-            await telemetry.shutdown()
-            await mission.end()
-        except :
-            pass
+           await nave.shutdown()
+        except Exception as e:
+            print(e)
         print("[SHUTDOWN] Todos os servidores terminados.")
 
 
