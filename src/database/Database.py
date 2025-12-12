@@ -170,7 +170,7 @@ class Database:
         ))
 
     async def get_RoversMissions(self):
-        sql = "SELECT * FROM rover_mission ORDER BY id DESC LIMIT 5;"
+        sql = "SELECT * FROM rover_mission;"
         cursor = await self.__execute_sql(sql)
         rows = await cursor.fetchall()
 
