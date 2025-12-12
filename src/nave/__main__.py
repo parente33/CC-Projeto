@@ -3,7 +3,7 @@ from .ObservationApi import *
 import asyncio
 
 async def main():
-    nave = Nave()
+    nave = Nave(host_adress="localhost",telem_port=50001,mission_port=50000,api_port=8000)
     await nave.bd.init()
     await nave.bd.load_missions_from_csv("../files/missions.csv")
     # --- Criar tasks ---

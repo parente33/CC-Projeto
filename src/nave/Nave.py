@@ -5,18 +5,19 @@ from common.Message import *
 from database.Database import Database
 from .ObservationApi import ObservationApi
 class Nave :
-    def __init__(self):
+    def __init__(self,host_adress = "localhost",telem_port=50001,mission_port=50000,api_port=800):
         self.bd : Database = Database()
-        self.mission = MissionLink_Server(callback_data = self.mission_rx,
+        self.mission = MissionLink_Server(host=host_adress,port=mission_port,callback_data = self.mission_rx,
                                           callback_request = self.mission_req)
         self.telemetry = Telemetry(
                 mode="server",
-                host="localhost",
-                port=50001,
+                host=host_adress,
+                port=telem_port,
                 callback_data = self.telemetry_rx)
 
         ObservationApi.bd = self.bd
-
+        ObservationApi.host =host_adress
+        ObservationApi.port = api_port
 
     async def telemetry_rx(self,payload, addr):
         result:Message_Telemetry = await Message_Telemetry.decode(payload)

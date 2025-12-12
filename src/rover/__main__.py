@@ -1,10 +1,10 @@
+import sys
 from .Rover import *
-import random
 
-async def main():
-    telemetria = Telemetry(mode = "client", host = 'localhost')
-    missionLink = MissionLink_Client(host = 'localhost', port = 50000)
-    rover = Rover(random.randint(1,1000)) #Exemplo, cada rover tera o seu IP
+async def main(argv:list[str]):
+    telemetria = Telemetry(mode = "client", host = "localhost",port=50001)
+    missionLink = MissionLink_Client(host = "localhost", port = 50000)
+    rover = Rover(int(argv[1]))
     # Conectar ao servidor
     try:
         await telemetria.connect()
@@ -50,6 +50,6 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        asyncio.run(main(sys.argv))
     except KeyboardInterrupt:
         print("\n[MAIN] Cliente encerrado.")

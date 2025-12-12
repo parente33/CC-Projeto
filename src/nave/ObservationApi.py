@@ -4,7 +4,8 @@ from database.Database import Database
 
 class ObservationApi:
     bd: Database = None
-
+    host = None
+    port = None
     @classmethod
     async def init(cls):
         """
@@ -34,8 +35,8 @@ class ObservationApi:
         # Iniciar servidor
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, "localhost", 8000)
-        print("Servidor rodando em http://localhost:8000")
+        site = web.TCPSite(runner, host=ObservationApi.host, port=ObservationApi.port)
+        print("Servidor rodando em http://"+ObservationApi.host + ":" + str(ObservationApi.port))
         await site.start()
 
         # Mantém o servidor ativo
