@@ -2,7 +2,7 @@ from protocols.Telemetry import Telemetry
 from protocols.MissionLink_Server import MissionLink_Server
 from common.Mission import Mission
 from common.Message import *
-from database.Database import Database
+from .database.Database import Database
 from .ObservationApi import ObservationApi
 class Nave :
     def __init__(self,host_adress = "localhost",telem_port=50001,mission_port=50000,api_port=800):

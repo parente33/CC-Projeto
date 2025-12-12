@@ -6,8 +6,8 @@ import time
 
 class MissionLink_Server :
 
-    MSS = 1448  # 1500-20(IPv4 forcado no CORE sem options) - 8(Header UDP sem padding) - 21(MissionHeader)
-    HANDSHAKE_TIMEOUT = 1
+    MSS = 1456  # 1500-20(IPv4 forcado no CORE sem options) - 8(Header UDP sem padding) - 16(MissionHeader)
+    HANDSHAKE_TIMEOUT = 5
     MAX_TRIES = 5
 
     async def start(self) :
@@ -64,7 +64,7 @@ class MissionLink_Server :
 
         tries = 0
         addr, rtt = self.connections_id[connection_ID]
-        timeout = (rtt if rtt != 0 else self.HANDSHAKE_TIMEOUT)
+        timeout = (rtt if rtt != 0 else self.HANDSHAKE_TIMEOUT) + 0.5 * (rtt if rtt != 0 else self.HANDSHAKE_TIMEOUT)
         start = time.time()
 
         while self.pending.get(key, None) == 'Pending':
@@ -81,7 +81,7 @@ class MissionLink_Server :
                 header.retr = MissionHeader.RETR                    # Set flag retransmit in message's header
                 packet = header.pack() + payload
                 self.socket.sendto(packet, addr)                    # Retransmit message
-                timeout += timeout * 2 ** tries
+                timeout *= 2
                 event.clear()                                       # Clear event before retry
                 continue
 
@@ -229,20 +229,9 @@ class MissionLink_Server :
 
     async def end(self):
         """
-        Gracefully end the server after all pending messages are sent and acknowledged
+        Gracefully end the server
         """
-        print("Waiting for pending operations to complete...")
-
-        # Wait until no pending ACKs and send queue is empty
-        while True:
-            has_pending = any(value == 'Pending' for value in self.pending.values())
-            queue_empty = self.send_queue.empty()
-
-            if not has_pending and queue_empty:
-                break
-
-
-        print("All operations complete. Shutting down...")
+        print("Shutting down...")
         self.shutdown_flag = True
 
         if self.receive_task:

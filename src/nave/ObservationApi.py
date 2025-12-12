@@ -1,6 +1,6 @@
 from aiohttp import web
 import asyncio
-from database.Database import Database
+from .database.Database import Database
 
 class ObservationApi:
     bd: Database = None

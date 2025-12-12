@@ -114,8 +114,7 @@ class Rover:
                 if self.task != None:
                     result:Mission = await missionLink.send_request(self.task.mission_id.to_bytes(length=4,byteorder='big'))
                 else:
-                    payload = bytes(4)
-                    result:Mission = await missionLink.send_request(payload)
+                    result:Mission = await missionLink.send_request()
                 mission:Mission = Mission.decode(result)
                 print("[CLIENT] REQUEST ENVIADO E RECEBIDO")
                 await self.setTask(mission)

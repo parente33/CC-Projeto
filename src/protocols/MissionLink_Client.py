@@ -5,7 +5,7 @@ import asyncio
 
 
 class MissionLink_Client:
-    MSS = 1448                          # 1500-20(IPv4 forçado no CORE sem options) - 8(Header UDP sem padding) - 24(MissionHeader)
+    MSS = 1456                    # 1500-20(IPv4 forçado no CORE sem options) - 8(Header UDP) - 16(MissionHeader)
     HANDSHAKE_TIMEOUT = 5
 
     def __init__(self, host, port = 50000):
@@ -62,7 +62,7 @@ class MissionLink_Client:
                     self.event.set()
 
 
-    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes, is_handshake = 0, is_request =0):
+    async def wait_acks(self,seq:bytes, header : MissionHeader, payload : bytes):
         """
         Waits for server's acks and retransmit message
 
@@ -98,14 +98,14 @@ class MissionLink_Client:
                 header.retr = MissionHeader.RETR                    # Set flag retransmit in message's header
                 message = header.pack() + (payload if payload is not None else b'')
                 self.socket.sendto(message, (self.host, self.port)) # Retransmit message
-                timeout += timeout*2**tries
+                timeout *= 2
                 continue
         #Received the rigth answer
         end = time.time()
 
         ans_header,ans_payload = self.answer
 
-        if ans_header.retr == MissionHeader.DEF and is_handshake == 0 and is_request == 0:
+        if ans_header.retr == MissionHeader.DEF:
             self.set_RTT(end-start)
 
         return (ans_header,ans_payload)
@@ -132,7 +132,7 @@ class MissionLink_Client:
         self.event.clear()
 
         tries = 0
-        timeout = self.RTO
+        timeout = self.RTO*2
 
         while self.waiting is not None:
             try:
@@ -142,7 +142,7 @@ class MissionLink_Client:
                 if tries > self.max_tries:
                     self.waiting = None
                     return None
-                timeout += timeout*2**tries
+                timeout *= 2
                 continue
         # Recebeu a resposta correta
         ans_header,ans_payload = self.answer
@@ -164,7 +164,7 @@ class MissionLink_Client:
 
         self.socket.sendto(syn_header.pack(),(self.host,self.port))
         self.seq_number += 1
-        result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None,is_handshake=1)
+        result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None)
 
         if result is None:
             raise RuntimeError("Handshake failed: no SYNACK received")
@@ -203,7 +203,6 @@ class MissionLink_Client:
         msg_header = MissionHeader(
             connection_ID = self.connection_ID,
             seq_number=seq,
-            length=len(payload),
             type = MissionHeader.TYPE_DATA
         )
         message = msg_header.pack() + payload
@@ -216,7 +215,7 @@ class MissionLink_Client:
         await self.end_interact()
         return True
 
-    async def send_request (self,payload) : # Aqui tem de vir payload para futuro se tivermos requests de varios tipos
+    async def send_request (self,payload=None) : # Aqui tem de vir payload para futuro se tivermos requests de varios tipos
         """
         Send Server a request for Data
 
@@ -238,19 +237,18 @@ class MissionLink_Client:
         msg_header = MissionHeader(
             connection_ID = self.connection_ID,
             seq_number =seq,
-            length = len(payload),
             type = MissionHeader.TYPE_REQ,
             req_number = req
         )
-        message = msg_header.pack() + payload
+        message = msg_header.pack() + (payload if payload is not None else b'')
         self.socket.sendto(message,(self.host,self.port))
-        result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload, is_request = 1)
+        result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
         if result is None:
-            raise RuntimeError(f"Message seq={seq} failed (timeout)")
+            raise RuntimeError(f"Message seq={seq} failed (timeout) in await acks")
 
         result =  await self.wait_data(MissionHeader.TYPE_DATA + req)
         if result is None:
-            raise RuntimeError(f"Message seq={seq} failed (timeout)")
+            raise RuntimeError(f"Message seq={seq} failed (timeout)in await data")
         ans_header, ans_payload = result
         ack_number = ans_header.seq_number
 

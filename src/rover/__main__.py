@@ -2,8 +2,8 @@ import sys
 from .Rover import *
 
 async def main(argv:list[str]):
-    telemetria = Telemetry(mode = "client", host = "localhost",port=50001)
-    missionLink = MissionLink_Client(host = "localhost", port = 50000)
+    telemetria = Telemetry(mode = "client", host = "10.0.3.20",port=50001)
+    missionLink = MissionLink_Client(host = "10.0.3.20", port = 50000)
     rover = Rover(int(argv[1]))
     # Conectar ao servidor
     try:

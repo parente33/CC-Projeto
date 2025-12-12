@@ -32,7 +32,7 @@ class DatabaseTests(IsolatedAsyncioTestCase):
         # Inserção inicial de telemetria dos rovers
         self.telemetry1 = Message_Telemetry(
             rover_id=10,
-            rover_status=0,               # status_dict[0] -> string
+            rover_status=0,
             rover_position=(5, 7)
         )
         self.telemetry2 = Message_Telemetry(
