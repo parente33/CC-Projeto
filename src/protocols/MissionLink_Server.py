@@ -42,7 +42,8 @@ class MissionLink_Server :
         self.callback_data              = callback_data                                     # Callback for DATA messages
         self.callback_request           = callback_request                                  # Callback for REQ messages
         self.shutdown_flag              = False                                             # Shutdown flag
-
+        self.n_rtr                      = 0                                                 #Number of retransmissions (for test purposes only)
+        self.rtr_received               = 0                                                 #Number of restransmissions messages received (for test purposes only)
     async def wait_acks(self, connection_ID : int, seq:bytes, header : MissionHeader, payload : bytes):
         """
         Waits for client's acks and retransmit message
@@ -81,6 +82,7 @@ class MissionLink_Server :
                 header.retr = MissionHeader.RETR                    # Set flag retransmit in message's header
                 packet = header.pack() + payload
                 self.socket.sendto(packet, addr)                    # Retransmit message
+                self.n_rtr+=1                                       #Test purposes only
                 timeout *= 2
                 event.clear()                                       # Clear event before retry
                 continue
@@ -132,7 +134,7 @@ class MissionLink_Server :
             if conn_id not in self.connections_id:
                 return conn_id
 
-    async def handle_answer(self, header, payload, addr):
+    async def handle_answer(self, header:MissionHeader, payload, addr):
         """
         Handle incoming messages from clients
 
@@ -145,6 +147,8 @@ class MissionLink_Server :
         connection_ID = header.connection_ID
         seq_number = header.seq_number
         ack_number = header.ack_number
+        if header.retr == MissionHeader.RETR :
+            self.rtr_received+=1
 
         if type == MissionHeader.TYPE_ACK :
             # Handle ACK messages
@@ -243,4 +247,8 @@ class MissionLink_Server :
         except Exception:
             pass
         self.socket.close()
+        print(f"Server retransmitted: {self.n_rtr} messages")
+        print(f"Server received: {self.rtr_received} retransmitted messages")
         print("Server ended successfully")
+
+

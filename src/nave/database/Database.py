@@ -112,9 +112,16 @@ class Database:
 
         row = await cursor.fetchone()
         if row is None:
-            return None
+            sql = "SELECT mission_id, geographic_area, task, max_duration, atualization_interval FROM missions ORDER BY RANDOM() LIMIT 1;"
+            cursor = await self.__execute_sql(sql)
 
+            row = await cursor.fetchone()
+            if row is None:
+                return None
         return Mission(row[0], row[1], row[2], row[3], row[4])
+
+
+
 
     async def get_missions(self) -> dict:
         sql = "SELECT * FROM missions"

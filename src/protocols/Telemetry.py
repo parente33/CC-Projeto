@@ -26,7 +26,7 @@ class Telemetry:
 
         self.shutdown_flag = False
         self.inactivity_timeout = 60  # segundos sem receber dados
-        self.check_interval = 30      # verifica timeouts a cada 10s
+        self.check_interval = 30      # verifica timeouts a cada 30s
 
         # Cliente
         self.reader = None
@@ -37,6 +37,7 @@ class Telemetry:
         self.server_task = None
         self.timeout_checker_task = None
         self.callback_tasks = set()
+        self.n_received = 0
 
 
     async def connect(self):
@@ -104,6 +105,7 @@ class Telemetry:
         try:
             # Lê payload
             payload = await asyncio.wait_for(reader.readexactly(size), timeout=10.0)
+            self.n_received +=1
             return payload
         except asyncio.TimeoutError:
             print("[Telemetry] Timeout ao receber payload")
@@ -275,5 +277,5 @@ class Telemetry:
                 await asyncio.gather(*self.callback_tasks, return_exceptions=True)
         else:  # cliente
             await self.disconnect()
-
+        print(f"Server received: {self.n_received} telemetry messages")
         print("[Telemetry] Shutdown completo")

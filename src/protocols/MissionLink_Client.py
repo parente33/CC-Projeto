@@ -167,7 +167,7 @@ class MissionLink_Client:
         result = await self.wait_acks(MissionHeader.TYPE_SYNACK + seq, syn_header, None)
 
         if result is None:
-            raise RuntimeError("Handshake failed: no SYNACK received")
+            return False
 
         synack_header, synack_payload = result
         self.connection_ID = synack_header.connection_ID
@@ -194,9 +194,10 @@ class MissionLink_Client:
 
         True : Success
         """
-
-        await self.handle_handshake()
-
+        sucess = True
+        sucess = await self.handle_handshake()
+        if sucess == False :
+            return False
         seq = self.seq_number
         self.seq_number = seq + 1  # incrementa seq para próximas mensagens
 
@@ -209,11 +210,11 @@ class MissionLink_Client:
         self.socket.sendto(message,(self.host,self.port))
         result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
         if result is None:
-            raise RuntimeError(f"Message seq={seq} failed (timeout)")
+            sucess = False
         #TERMINAR A RELAÇAO COM FYN
 
         await self.end_interact()
-        return True
+        return sucess
 
     async def send_request (self,payload=None) : # Aqui tem de vir payload para futuro se tivermos requests de varios tipos
         """
@@ -228,7 +229,9 @@ class MissionLink_Client:
         True : Success
 
         """
-        await self.handle_handshake()
+        sucess = await self.handle_handshake()
+        if sucess == None :
+            return None
         seq = self.seq_number
         req = self.req_number
         self.seq_number = seq + 1  # incrementa seq para próximas mensagens
@@ -244,11 +247,11 @@ class MissionLink_Client:
         self.socket.sendto(message,(self.host,self.port))
         result = await self.wait_acks(MissionHeader.TYPE_ACK + seq, msg_header, payload)
         if result is None:
-            raise RuntimeError(f"Message seq={seq} failed (timeout) in await acks")
+            return None
 
         result =  await self.wait_data(MissionHeader.TYPE_DATA + req)
         if result is None:
-            raise RuntimeError(f"Message seq={seq} failed (timeout)in await data")
+            return None
         ans_header, ans_payload = result
         ack_number = ans_header.seq_number
 

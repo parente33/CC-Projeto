@@ -5,9 +5,9 @@
     <device id="2" name="ST1" icon="" canvas="1" type="router" class="" image="" compose="" compose_name="">
       <position x="1017.0618896484375" y="280.2405700683594" lat="47.576619058983276" lon="-122.11861958514447" alt="2.0"/>
       <services>
+        <service name="IPForward"/>
         <service name="OSPFv2"/>
         <service name="OSPFv3"/>
-        <service name="IPForward"/>
         <service name="zebra"/>
       </services>
     </device>
@@ -32,18 +32,18 @@
     <device id="7" name="ST2" icon="" canvas="1" type="router" class="" image="" compose="" compose_name="">
       <position x="665.1353759765625" y="359.3341979980469" lat="47.57590008491005" lon="-122.12336169963625" alt="2.0"/>
       <services>
+        <service name="IPForward"/>
         <service name="OSPFv2"/>
         <service name="OSPFv3"/>
-        <service name="IPForward"/>
         <service name="zebra"/>
       </services>
     </device>
     <device id="8" name="ST3" icon="" canvas="1" type="router" class="" image="" compose="" compose_name="">
       <position x="1313.4197998046875" y="359.3341979980469" lat="47.57590008491005" lon="-122.11462624254054" alt="2.0"/>
       <services>
+        <service name="IPForward"/>
         <service name="OSPFv2"/>
         <service name="OSPFv3"/>
-        <service name="IPForward"/>
         <service name="zebra"/>
       </services>
     </device>
@@ -60,7 +60,7 @@
       </services>
     </device>
     <device id="9" name="GroundControl" icon="" canvas="1" type="PC" class="" image="" compose="" compose_name="">
-      <position x="1589.8504638671875" y="285.1515197753906" lat="47.576574417931" lon="-122.11090141418263" alt="2.0"/>
+      <position x="1600.90771484375" y="282.9400634765625" lat="47.57659452030738" lon="-122.11075242071935" alt="2.0"/>
       <services>
         <service name="DefaultRoute"/>
       </services>
@@ -134,6 +134,6 @@
     <configuration name="shapes" value="[]"/>
     <configuration name="edges" value="[]"/>
     <configuration name="hidden" value="[]"/>
-    <configuration name="canvas" value="{&quot;gridlines&quot;: true, &quot;canvases&quot;: [{&quot;id&quot;: 1, &quot;wallpaper&quot;: null, &quot;wallpaper_style&quot;: 1, &quot;fit_image&quot;: false, &quot;dimensions&quot;: [2000, 1000]}]}"/>
+    <configuration name="canvas" value="{&quot;gridlines&quot;: false, &quot;canvases&quot;: [{&quot;id&quot;: 1, &quot;wallpaper&quot;: null, &quot;wallpaper_style&quot;: 1, &quot;fit_image&quot;: false, &quot;dimensions&quot;: [2000, 1000]}]}"/>
   </session_metadata>
 </scenario>
